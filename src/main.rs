@@ -1,3 +1,5 @@
+use bevy::prelude::*;
+use bevy_egui::{egui, EguiContexts, EguiPlugin};
 use rand::seq::SliceRandom;
 use rand::thread_rng;
 
@@ -7,112 +9,158 @@ struct Card {
     value: u8
 }
 
+#[derive(Default, Debug, Resource)]
+struct GameState {
+    deck: Vec<Card>,
+    hand: Vec<Card>,
+}
+
 #[derive(Copy, Clone, Debug, PartialEq)]
 enum Suit{
-    Suitless,
     Heart,
     Diamond,
     Spade,
     Club,
 }
 
-fn play (mut deck: [Card; 52]) {
-    // Shuffle Deck
-    let mut rng = thread_rng();
-    deck.shuffle(&mut rng);
-
-    // Create hand
-    let mut hand = Vec::new();
-    // Add first 3 cards
-    for num in 0..3 {
-        hand.push(deck[num]);
-    }
-
-    // Start game
-    for el in deck.iter().skip(3) {
-        hand.push(*el);
-        
-        // Draw again if hand too small
-        if hand.len() < 4 { continue; }
-
-        // Check value of top and 4th card
-        if hand[hand.len()-1].value == hand[hand.len()-4].value {
-            // If match, remove top 4 cards from hand
-            for _ in 0..4 {
-                hand.pop();
-            }
-            continue;
-        }
-
-        // Check suit of top and 4th card
-        if hand[hand.len()-1].suit == hand[hand.len()-4].suit {
-            //If match, remove middle 2 cards from hand
-            hand.remove(hand.len()-2);
-            hand.remove(hand.len()-2);
-        }
-    }
-
-    match hand.len() {
-        0 => println!("You win!"),
-        _ => println!("You lose!"),
+use std::fmt;
+impl std::fmt::Display for Suit {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let suit_str = match self {
+            Suit::Heart => "Heart",
+            Suit::Diamond => "Diamond",
+            Suit::Spade => "Spade",
+            Suit::Club => "Club",
+        };
+        write!(f, "{}", suit_str)
     }
 }
 
-fn main() {
-
-    let mut deck = [Card { suit: Suit::Suitless, value: 0 }; 52];
-
-    // Init deck
-    let mut deck_position = 0;
+fn init_deck() -> Vec<Card> {
+    let mut deck = Vec::new();
     let mut value: u8 = 1;
-    let mut suit = 0;
-    while suit < 4{
+    let mut suit: u8 = 0;
+    while suit < 4 {
         while value < 14 {
-            match suit {
-
-                0 => {
-                    deck[deck_position] = Card {
-                        suit: Suit::Heart,
-                        value: value,
-                    };
-                    value += 1;
-                    deck_position += 1;
-                }
-
-                1 => {
-                    deck[deck_position] = Card {
-                        suit: Suit::Diamond,
-                        value: value,
-                    };
-                    value += 1;
-                    deck_position += 1;
-                }
-
-                2 => {
-                    deck[deck_position] = Card {
-                        suit: Suit::Spade,
-                        value: value,
-                    };
-                    value += 1;
-                    deck_position += 1;
-                }
-
-                3 => {
-                    deck[deck_position] = Card {
-                        suit: Suit::Club,
-                        value: value,
-                    };
-                    value += 1;
-                    deck_position += 1;
-                }
-
-                _ => (),
-            }
+        let card = match suit {
+                0 => Card { suit: Suit::Heart, value },
+                1 => Card { suit: Suit::Diamond, value },
+                2 => Card { suit: Suit::Spade, value },
+                3 => Card { suit: Suit::Club, value },
+                _ => continue,
+            };
+            deck.push(card);
+            value += 1;
         }
-        value = 1;
+        value =1;
         suit += 1;
     }
+
+    // Shuffle
+    let mut rng = rand::thread_rng();
+    deck.shuffle(&mut rng);
+    deck
+}
+
+fn setup(mut commands: Commands) {
     
-    play(deck.clone());
+    /*
+    println!("shuffling");
+    let mut deck = Vec::new();
+    let mut value: u8 = 1;
+    let mut suit: u8 = 0;
+    while suit < 4 {
+        while value < 14 {
+        let card = match suit {
+                0 => Card { suit: Suit::Heart, value },
+                1 => Card { suit: Suit::Diamond, value },
+                2 => Card { suit: Suit::Spade, value },
+                3 => Card { suit: Suit::Club, value },
+                _ => continue,
+            };
+            deck.push(card);
+            value += 1;
+        }
+        value =1;
+        suit += 1;
+    }
+
+    // Shuffle
+    let mut rng = rand::thread_rng();
+    deck.shuffle(&mut rng);*/
+
+    commands.insert_resource(GameState {
+        deck: init_deck(),
+        hand: Vec::new(),
+    });
+}
+
+fn check_cards(hand: &mut Vec<Card>) {
+    let first = hand[hand.len() -1];
+    let fourth = hand[hand.len() -4];
+
+    if first.value == fourth.value {
+        for _ in 0..4 {
+            hand.pop();
+        }
+    }
+
+    if first.suit == fourth.suit {
+        hand.remove(hand.len() - 2);
+        hand.remove(hand.len() - 2);
+    }
+}
+
+
+fn my_ui(mut contexts: EguiContexts, mut game_state: ResMut<GameState>) {
+    egui::CentralPanel::default().show(contexts.ctx_mut(), |ui| {
+        ui.heading("Once in a Lifetime");
+        
+        
+        ui.label(format!("Cards left: {}", game_state.deck.len()));
+        ui.horizontal(|ui| {
+            if ui.button("🂠").clicked() {
+                if let Some(card) = game_state.deck.pop() {
+                    game_state.hand.push(card);
+                    if game_state.hand.len() > 3 {
+                        check_cards(&mut game_state.hand);
+                    }
+                    println!("{:?} Drawn", card);
+                } else {
+                    println!("No more cards in the deck!");
+                    if game_state.deck.is_empty() { 
+                        println!("You lose!");
+                        game_state.hand.clear();
+                        game_state.deck = init_deck();
+                    } else {
+                        println!("You win!");
+                        game_state.hand.clear();
+                        game_state.deck = init_deck();
+                    }
+                }
+            }
+        });
+
+        ui.separator();
+
+        ui.label("Hand:");
+
+        ui.horizontal(|ui| {
+            for card in &game_state.hand {
+                ui.add(egui::Button::new(format!("{} of {}s", card.value, card.suit)));
+            }
+        });
+    });
+}
+
+
+fn main() {
+
+    App::new()
+        .add_plugins(DefaultPlugins)
+        .add_plugins(EguiPlugin)
+        .add_systems(Startup, setup)
+        .add_systems(Update, my_ui)
+        .run();
 
 }
