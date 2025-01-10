@@ -1,7 +1,6 @@
 use bevy::prelude::*;
 use bevy_egui::{egui, EguiContexts, EguiPlugin};
 use rand::seq::SliceRandom;
-use rand::thread_rng;
 
 #[derive(Copy, Clone, Debug)]
 struct Card {
@@ -64,31 +63,6 @@ fn init_deck() -> Vec<Card> {
 
 fn setup(mut commands: Commands) {
     
-    /*
-    println!("shuffling");
-    let mut deck = Vec::new();
-    let mut value: u8 = 1;
-    let mut suit: u8 = 0;
-    while suit < 4 {
-        while value < 14 {
-        let card = match suit {
-                0 => Card { suit: Suit::Heart, value },
-                1 => Card { suit: Suit::Diamond, value },
-                2 => Card { suit: Suit::Spade, value },
-                3 => Card { suit: Suit::Club, value },
-                _ => continue,
-            };
-            deck.push(card);
-            value += 1;
-        }
-        value =1;
-        suit += 1;
-    }
-
-    // Shuffle
-    let mut rng = rand::thread_rng();
-    deck.shuffle(&mut rng);*/
-
     commands.insert_resource(GameState {
         deck: init_deck(),
         hand: Vec::new(),
@@ -108,6 +82,9 @@ fn check_cards(hand: &mut Vec<Card>) {
     if first.suit == fourth.suit {
         hand.remove(hand.len() - 2);
         hand.remove(hand.len() - 2);
+        if hand.len() > 3 {
+            check_cards(hand);
+        }
     }
 }
 
