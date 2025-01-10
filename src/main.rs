@@ -8,10 +8,11 @@ struct Card {
     value: u8
 }
 
-#[derive(Default, Debug, Resource)]
+#[derive(Debug, Resource)]
 struct GameState {
     deck: Vec<Card>,
     hand: Vec<Card>,
+    on_deck: Card,
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -26,10 +27,10 @@ use std::fmt;
 impl std::fmt::Display for Suit {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let suit_str = match self {
-            Suit::Heart => "Heart",
-            Suit::Diamond => "Diamond",
-            Suit::Spade => "Spade",
-            Suit::Club => "Club",
+            Suit::Heart => "hearts",
+            Suit::Diamond => "diamonds",
+            Suit::Spade => "spades",
+            Suit::Club => "clubs",
         };
         write!(f, "{}", suit_str)
     }
@@ -61,12 +62,14 @@ fn init_deck() -> Vec<Card> {
     deck
 }
 
-fn setup(mut commands: Commands) {
-    
+fn setup(mut commands: Commands, mut context: EguiContexts) {
+    egui_extras::install_image_loaders(context.ctx_mut());
     commands.insert_resource(GameState {
         deck: init_deck(),
         hand: Vec::new(),
+        on_deck: Card { value: 1, suit: Suit::Heart },
     });
+
 }
 
 fn check_cards(hand: &mut Vec<Card>) {
@@ -90,13 +93,14 @@ fn check_cards(hand: &mut Vec<Card>) {
 
 
 fn my_ui(mut contexts: EguiContexts, mut game_state: ResMut<GameState>) {
+    game_state.on_deck = game_state.deck[game_state.deck.len()-1].clone();
     egui::CentralPanel::default().show(contexts.ctx_mut(), |ui| {
+		egui::Image::new(egui::include_image!("../assets/background.png")).paint_at(ui, ui.ctx().screen_rect());
         ui.heading("Once in a Lifetime");
         
-        
         ui.label(format!("Cards left: {}", game_state.deck.len()));
-        ui.horizontal(|ui| {
-            if ui.button("🂠").clicked() {
+        ui.vertical(|ui| {
+            if ui.button("Draw").clicked() {
                 if let Some(card) = game_state.deck.pop() {
                     game_state.hand.push(card);
                     if game_state.hand.len() > 3 {
@@ -116,15 +120,165 @@ fn my_ui(mut contexts: EguiContexts, mut game_state: ResMut<GameState>) {
                     }
                 }
             }
+
+            //On Deck Display
+            ui.separator();
+            ui.label("Card on Deck");
+			match game_state.on_deck.suit {
+				Suit::Heart => {
+					match game_state.on_deck.value {
+						1 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/1_of_hearts.png")).fit_to_original_size(0.125)),
+						2 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/2_of_hearts.png")).fit_to_original_size(0.125)),
+						3 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/3_of_hearts.png")).fit_to_original_size(0.125)),
+						4 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/4_of_hearts.png")).fit_to_original_size(0.125)),
+						5 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/5_of_hearts.png")).fit_to_original_size(0.125)),
+						6 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/6_of_hearts.png")).fit_to_original_size(0.125)),
+						7 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/7_of_hearts.png")).fit_to_original_size(0.125)),
+						8 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/8_of_hearts.png")).fit_to_original_size(0.125)),
+						9 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/9_of_hearts.png")).fit_to_original_size(0.125)),
+						10 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/10_of_hearts.png")).fit_to_original_size(0.125)),
+						11 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/11_of_hearts.png")).fit_to_original_size(0.125)),
+						12 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/12_of_hearts.png")).fit_to_original_size(0.125)),
+						13 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/13_of_hearts.png")).fit_to_original_size(0.125)),
+						_ => ui.add(egui::Image::new(egui::include_image!("../assets/cards/error.png")).fit_to_original_size(0.125)),
+					};
+				},
+				Suit::Diamond => {
+					match game_state.on_deck.value {
+						1 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/1_of_diamonds.png")).fit_to_original_size(0.125)),
+						2 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/2_of_diamonds.png")).fit_to_original_size(0.125)),
+						3 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/3_of_diamonds.png")).fit_to_original_size(0.125)),
+						4 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/4_of_diamonds.png")).fit_to_original_size(0.125)),
+						5 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/5_of_diamonds.png")).fit_to_original_size(0.125)),
+						6 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/6_of_diamonds.png")).fit_to_original_size(0.125)),
+						7 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/7_of_diamonds.png")).fit_to_original_size(0.125)),
+						8 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/8_of_diamonds.png")).fit_to_original_size(0.125)),
+						9 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/9_of_diamonds.png")).fit_to_original_size(0.125)),
+						10 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/10_of_diamonds.png")).fit_to_original_size(0.125)),
+						11 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/11_of_diamonds.png")).fit_to_original_size(0.125)),
+						12 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/12_of_diamonds.png")).fit_to_original_size(0.125)),
+						13 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/13_of_diamonds.png")).fit_to_original_size(0.125)),
+						_ => ui.add(egui::Image::new(egui::include_image!("../assets/cards/error.png")).fit_to_original_size(0.125)),
+					};
+				},
+				Suit::Spade => {
+					match game_state.on_deck.value {
+						1 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/1_of_spades.png")).fit_to_original_size(0.125)),
+						2 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/2_of_spades.png")).fit_to_original_size(0.125)),
+						3 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/3_of_spades.png")).fit_to_original_size(0.125)),
+						4 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/4_of_spades.png")).fit_to_original_size(0.125)),
+						5 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/5_of_spades.png")).fit_to_original_size(0.125)),
+						6 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/6_of_spades.png")).fit_to_original_size(0.125)),
+						7 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/7_of_spades.png")).fit_to_original_size(0.125)),
+						8 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/8_of_spades.png")).fit_to_original_size(0.125)),
+						9 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/9_of_spades.png")).fit_to_original_size(0.125)),
+						10 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/10_of_spades.png")).fit_to_original_size(0.125)),
+						11 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/11_of_spades.png")).fit_to_original_size(0.125)),
+						12 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/12_of_spades.png")).fit_to_original_size(0.125)),
+						13 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/13_of_spades.png")).fit_to_original_size(0.125)),
+						_ => ui.add(egui::Image::new(egui::include_image!("../assets/cards/error.png")).fit_to_original_size(0.125)),
+					};
+				},
+				Suit::Club => {
+					match game_state.on_deck.value {
+						1 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/1_of_clubs.png")).fit_to_original_size(0.125)),
+						2 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/2_of_clubs.png")).fit_to_original_size(0.125)),
+						3 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/3_of_clubs.png")).fit_to_original_size(0.125)),
+						4 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/4_of_clubs.png")).fit_to_original_size(0.125)),
+						5 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/5_of_clubs.png")).fit_to_original_size(0.125)),
+						6 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/6_of_clubs.png")).fit_to_original_size(0.125)),
+						7 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/7_of_clubs.png")).fit_to_original_size(0.125)),
+						8 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/8_of_clubs.png")).fit_to_original_size(0.125)),
+						9 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/9_of_clubs.png")).fit_to_original_size(0.125)),
+						10 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/10_of_clubs.png")).fit_to_original_size(0.125)),
+						11 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/11_of_clubs.png")).fit_to_original_size(0.125)),
+						12 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/12_of_clubs.png")).fit_to_original_size(0.125)),
+						13 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/13_of_clubs.png")).fit_to_original_size(0.125)),
+						_ => ui.add(egui::Image::new(egui::include_image!("../assets/cards/error.png")).fit_to_original_size(0.125)),
+					};
+				},
+			};
         });
 
         ui.separator();
 
         ui.label("Hand:");
-
         ui.horizontal(|ui| {
             for card in &game_state.hand {
-                ui.add(egui::Button::new(format!("{} of {}s", card.value, card.suit)));
+                match card.suit {
+                    Suit::Heart => {
+                        match card.value {
+                            1 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/1_of_hearts.png")).fit_to_original_size(0.25)),
+                            2 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/2_of_hearts.png")).fit_to_original_size(0.25)),
+                            3 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/3_of_hearts.png")).fit_to_original_size(0.25)),
+                            4 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/4_of_hearts.png")).fit_to_original_size(0.25)),
+                            5 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/5_of_hearts.png")).fit_to_original_size(0.25)),
+                            6 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/6_of_hearts.png")).fit_to_original_size(0.25)),
+                            7 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/7_of_hearts.png")).fit_to_original_size(0.25)),
+                            8 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/8_of_hearts.png")).fit_to_original_size(0.25)),
+                            9 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/9_of_hearts.png")).fit_to_original_size(0.25)),
+                            10 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/10_of_hearts.png")).fit_to_original_size(0.25)),
+                            11 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/11_of_hearts.png")).fit_to_original_size(0.25)),
+                            12 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/12_of_hearts.png")).fit_to_original_size(0.25)),
+                            13 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/13_of_hearts.png")).fit_to_original_size(0.25)),
+                            _ => ui.add(egui::Image::new(egui::include_image!("../assets/cards/error.png")).fit_to_original_size(0.25)),
+                        };
+                    },
+                    Suit::Diamond => {
+                        match card.value {
+                            1 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/1_of_diamonds.png")).fit_to_original_size(0.25)),
+                            2 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/2_of_diamonds.png")).fit_to_original_size(0.25)),
+                            3 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/3_of_diamonds.png")).fit_to_original_size(0.25)),
+                            4 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/4_of_diamonds.png")).fit_to_original_size(0.25)),
+                            5 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/5_of_diamonds.png")).fit_to_original_size(0.25)),
+                            6 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/6_of_diamonds.png")).fit_to_original_size(0.25)),
+                            7 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/7_of_diamonds.png")).fit_to_original_size(0.25)),
+                            8 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/8_of_diamonds.png")).fit_to_original_size(0.25)),
+                            9 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/9_of_diamonds.png")).fit_to_original_size(0.25)),
+                            10 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/10_of_diamonds.png")).fit_to_original_size(0.25)),
+                            11 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/11_of_diamonds.png")).fit_to_original_size(0.25)),
+                            12 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/12_of_diamonds.png")).fit_to_original_size(0.25)),
+                            13 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/13_of_diamonds.png")).fit_to_original_size(0.25)),
+                            _ => ui.add(egui::Image::new(egui::include_image!("../assets/cards/error.png")).fit_to_original_size(0.25)),
+                        };
+                    },
+                    Suit::Spade => {
+                        match card.value {
+                            1 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/1_of_spades.png")).fit_to_original_size(0.25)),
+                            2 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/2_of_spades.png")).fit_to_original_size(0.25)),
+                            3 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/3_of_spades.png")).fit_to_original_size(0.25)),
+                            4 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/4_of_spades.png")).fit_to_original_size(0.25)),
+                            5 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/5_of_spades.png")).fit_to_original_size(0.25)),
+                            6 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/6_of_spades.png")).fit_to_original_size(0.25)),
+                            7 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/7_of_spades.png")).fit_to_original_size(0.25)),
+                            8 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/8_of_spades.png")).fit_to_original_size(0.25)),
+                            9 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/9_of_spades.png")).fit_to_original_size(0.25)),
+                            10 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/10_of_spades.png")).fit_to_original_size(0.25)),
+                            11 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/11_of_spades.png")).fit_to_original_size(0.25)),
+                            12 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/12_of_spades.png")).fit_to_original_size(0.25)),
+                            13 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/13_of_spades.png")).fit_to_original_size(0.25)),
+                            _ => ui.add(egui::Image::new(egui::include_image!("../assets/cards/error.png")).fit_to_original_size(0.25)),
+                        };
+                    },
+                    Suit::Club => {
+                        match card.value {
+                            1 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/1_of_clubs.png")).fit_to_original_size(0.25)),
+                            2 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/2_of_clubs.png")).fit_to_original_size(0.25)),
+                            3 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/3_of_clubs.png")).fit_to_original_size(0.25)),
+                            4 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/4_of_clubs.png")).fit_to_original_size(0.25)),
+                            5 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/5_of_clubs.png")).fit_to_original_size(0.25)),
+                            6 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/6_of_clubs.png")).fit_to_original_size(0.25)),
+                            7 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/7_of_clubs.png")).fit_to_original_size(0.25)),
+                            8 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/8_of_clubs.png")).fit_to_original_size(0.25)),
+                            9 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/9_of_clubs.png")).fit_to_original_size(0.25)),
+                            10 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/10_of_clubs.png")).fit_to_original_size(0.25)),
+                            11 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/11_of_clubs.png")).fit_to_original_size(0.25)),
+                            12 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/12_of_clubs.png")).fit_to_original_size(0.25)),
+                            13 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/13_of_clubs.png")).fit_to_original_size(0.25)),
+                            _ => ui.add(egui::Image::new(egui::include_image!("../assets/cards/error.png")).fit_to_original_size(0.25)),
+                        };
+                    },
+                }
             }
         });
     });

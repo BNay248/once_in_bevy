@@ -8,3 +8,5 @@ bevy = "0.15.1"
 bevy_egui = "0.32.0"
 egui = "0.30.0"
 rand = "0.8.5"
+egui_extras = { version = "*", features = ["all_loaders"] }
+image = { version = "0.25", features = [ "png"] }
