@@ -36,6 +36,12 @@ impl std::fmt::Display for Suit {
     }
 }
 
+#[derive(Resource)]
+struct Popup {
+    show_popup: bool,
+    win: bool,
+}
+
 fn init_deck() -> Vec<Card> {
     let mut deck = Vec::new();
     let mut value: u8 = 1;
@@ -69,6 +75,7 @@ fn setup(mut commands: Commands, mut context: EguiContexts) {
         hand: Vec::new(),
         on_deck: Card { value: 1, suit: Suit::Heart },
     });
+    commands.insert_resource(Popup { show_popup: false, win: false } );
 
 }
 
@@ -92,118 +99,122 @@ fn check_cards(hand: &mut Vec<Card>) {
 }
 
 
-fn my_ui(mut contexts: EguiContexts, mut game_state: ResMut<GameState>) {
-    game_state.on_deck = game_state.deck[game_state.deck.len()-1].clone();
+fn my_ui(mut contexts: EguiContexts, mut game_state: ResMut<GameState>, mut popup: ResMut<Popup>) {
     egui::CentralPanel::default().show(contexts.ctx_mut(), |ui| {
-		egui::Image::new(egui::include_image!("../assets/background.png")).paint_at(ui, ui.ctx().screen_rect());
-        ui.heading("Once in a Lifetime");
-        
+    //egui::Image::new(egui::include_image!("../assets/background.png")).paint_at(ui, ui.ctx().screen_rect());
+    ui.heading("Once in a Lifetime");
+    ui.horizontal(|ui| {
         ui.label(format!("Cards left: {}", game_state.deck.len()));
-        ui.vertical(|ui| {
-            if ui.button("Draw").clicked() {
-                if let Some(card) = game_state.deck.pop() {
-                    game_state.hand.push(card);
-                    if game_state.hand.len() > 3 {
-                        check_cards(&mut game_state.hand);
-                    }
-                    println!("{:?} Drawn", card);
+        if ui.button("Draw").clicked() {
+            if let Some(card) = game_state.deck.pop() {
+                game_state.hand.push(card);
+                if game_state.hand.len() > 3 {
+                    check_cards(&mut game_state.hand);
+                }
                 } else {
-                    println!("No more cards in the deck!");
-                    if game_state.deck.is_empty() { 
-                        println!("You lose!");
+                    popup.show_popup = true;
+                    if game_state.hand.is_empty() { 
+                        popup.win = true;
                         game_state.hand.clear();
                         game_state.deck = init_deck();
                     } else {
-                        println!("You win!");
+                        popup.win = false;
                         game_state.hand.clear();
                         game_state.deck = init_deck();
                     }
+
                 }
             }
 
-            //On Deck Display
+            // Display on Deck
             ui.separator();
             ui.label("Card on Deck");
-			match game_state.on_deck.suit {
-				Suit::Heart => {
-					match game_state.on_deck.value {
-						1 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/1_of_hearts.png")).fit_to_original_size(0.125)),
-						2 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/2_of_hearts.png")).fit_to_original_size(0.125)),
-						3 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/3_of_hearts.png")).fit_to_original_size(0.125)),
-						4 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/4_of_hearts.png")).fit_to_original_size(0.125)),
-						5 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/5_of_hearts.png")).fit_to_original_size(0.125)),
-						6 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/6_of_hearts.png")).fit_to_original_size(0.125)),
-						7 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/7_of_hearts.png")).fit_to_original_size(0.125)),
-						8 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/8_of_hearts.png")).fit_to_original_size(0.125)),
-						9 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/9_of_hearts.png")).fit_to_original_size(0.125)),
-						10 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/10_of_hearts.png")).fit_to_original_size(0.125)),
-						11 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/11_of_hearts.png")).fit_to_original_size(0.125)),
-						12 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/12_of_hearts.png")).fit_to_original_size(0.125)),
-						13 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/13_of_hearts.png")).fit_to_original_size(0.125)),
-						_ => ui.add(egui::Image::new(egui::include_image!("../assets/cards/error.png")).fit_to_original_size(0.125)),
-					};
-				},
-				Suit::Diamond => {
-					match game_state.on_deck.value {
-						1 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/1_of_diamonds.png")).fit_to_original_size(0.125)),
-						2 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/2_of_diamonds.png")).fit_to_original_size(0.125)),
-						3 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/3_of_diamonds.png")).fit_to_original_size(0.125)),
-						4 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/4_of_diamonds.png")).fit_to_original_size(0.125)),
-						5 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/5_of_diamonds.png")).fit_to_original_size(0.125)),
-						6 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/6_of_diamonds.png")).fit_to_original_size(0.125)),
-						7 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/7_of_diamonds.png")).fit_to_original_size(0.125)),
-						8 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/8_of_diamonds.png")).fit_to_original_size(0.125)),
-						9 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/9_of_diamonds.png")).fit_to_original_size(0.125)),
-						10 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/10_of_diamonds.png")).fit_to_original_size(0.125)),
-						11 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/11_of_diamonds.png")).fit_to_original_size(0.125)),
-						12 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/12_of_diamonds.png")).fit_to_original_size(0.125)),
-						13 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/13_of_diamonds.png")).fit_to_original_size(0.125)),
-						_ => ui.add(egui::Image::new(egui::include_image!("../assets/cards/error.png")).fit_to_original_size(0.125)),
-					};
-				},
-				Suit::Spade => {
-					match game_state.on_deck.value {
-						1 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/1_of_spades.png")).fit_to_original_size(0.125)),
-						2 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/2_of_spades.png")).fit_to_original_size(0.125)),
-						3 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/3_of_spades.png")).fit_to_original_size(0.125)),
-						4 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/4_of_spades.png")).fit_to_original_size(0.125)),
-						5 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/5_of_spades.png")).fit_to_original_size(0.125)),
-						6 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/6_of_spades.png")).fit_to_original_size(0.125)),
-						7 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/7_of_spades.png")).fit_to_original_size(0.125)),
-						8 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/8_of_spades.png")).fit_to_original_size(0.125)),
-						9 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/9_of_spades.png")).fit_to_original_size(0.125)),
-						10 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/10_of_spades.png")).fit_to_original_size(0.125)),
-						11 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/11_of_spades.png")).fit_to_original_size(0.125)),
-						12 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/12_of_spades.png")).fit_to_original_size(0.125)),
-						13 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/13_of_spades.png")).fit_to_original_size(0.125)),
-						_ => ui.add(egui::Image::new(egui::include_image!("../assets/cards/error.png")).fit_to_original_size(0.125)),
-					};
-				},
-				Suit::Club => {
-					match game_state.on_deck.value {
-						1 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/1_of_clubs.png")).fit_to_original_size(0.125)),
-						2 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/2_of_clubs.png")).fit_to_original_size(0.125)),
-						3 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/3_of_clubs.png")).fit_to_original_size(0.125)),
-						4 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/4_of_clubs.png")).fit_to_original_size(0.125)),
-						5 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/5_of_clubs.png")).fit_to_original_size(0.125)),
-						6 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/6_of_clubs.png")).fit_to_original_size(0.125)),
-						7 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/7_of_clubs.png")).fit_to_original_size(0.125)),
-						8 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/8_of_clubs.png")).fit_to_original_size(0.125)),
-						9 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/9_of_clubs.png")).fit_to_original_size(0.125)),
-						10 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/10_of_clubs.png")).fit_to_original_size(0.125)),
-						11 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/11_of_clubs.png")).fit_to_original_size(0.125)),
-						12 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/12_of_clubs.png")).fit_to_original_size(0.125)),
-						13 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/13_of_clubs.png")).fit_to_original_size(0.125)),
-						_ => ui.add(egui::Image::new(egui::include_image!("../assets/cards/error.png")).fit_to_original_size(0.125)),
-					};
-				},
-			};
+            if game_state.deck.len() > 0 {
+                game_state.on_deck = game_state.deck[game_state.deck.len()-1].clone();
+                match game_state.on_deck.suit {
+                    Suit::Heart => {
+                        match game_state.on_deck.value {
+                            1 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/1_of_hearts.png")).fit_to_original_size(0.125)),
+                            2 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/2_of_hearts.png")).fit_to_original_size(0.125)),
+                            3 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/3_of_hearts.png")).fit_to_original_size(0.125)),
+                            4 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/4_of_hearts.png")).fit_to_original_size(0.125)),
+                            5 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/5_of_hearts.png")).fit_to_original_size(0.125)),
+                            6 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/6_of_hearts.png")).fit_to_original_size(0.125)),
+                            7 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/7_of_hearts.png")).fit_to_original_size(0.125)),
+                            8 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/8_of_hearts.png")).fit_to_original_size(0.125)),
+                            9 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/9_of_hearts.png")).fit_to_original_size(0.125)),
+                            10 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/10_of_hearts.png")).fit_to_original_size(0.125)),
+                            11 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/11_of_hearts.png")).fit_to_original_size(0.125)),
+                            12 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/12_of_hearts.png")).fit_to_original_size(0.125)),
+                            13 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/13_of_hearts.png")).fit_to_original_size(0.125)),
+                            _ => ui.add(egui::Image::new(egui::include_image!("../assets/cards/error.png")).fit_to_original_size(0.125)),
+                        };
+                    },
+                    Suit::Diamond => {
+                        match game_state.on_deck.value {
+                            1 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/1_of_diamonds.png")).fit_to_original_size(0.125)),
+                            2 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/2_of_diamonds.png")).fit_to_original_size(0.125)),
+                            3 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/3_of_diamonds.png")).fit_to_original_size(0.125)),
+                            4 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/4_of_diamonds.png")).fit_to_original_size(0.125)),
+                            5 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/5_of_diamonds.png")).fit_to_original_size(0.125)),
+                            6 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/6_of_diamonds.png")).fit_to_original_size(0.125)),
+                            7 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/7_of_diamonds.png")).fit_to_original_size(0.125)),
+                            8 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/8_of_diamonds.png")).fit_to_original_size(0.125)),
+                            9 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/9_of_diamonds.png")).fit_to_original_size(0.125)),
+                            10 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/10_of_diamonds.png")).fit_to_original_size(0.125)),
+                            11 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/11_of_diamonds.png")).fit_to_original_size(0.125)),
+                            12 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/12_of_diamonds.png")).fit_to_original_size(0.125)),
+                            13 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/13_of_diamonds.png")).fit_to_original_size(0.125)),
+                            _ => ui.add(egui::Image::new(egui::include_image!("../assets/cards/error.png")).fit_to_original_size(0.125)),
+                        };
+                    },
+                    Suit::Spade => {
+                        match game_state.on_deck.value {
+                            1 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/1_of_spades.png")).fit_to_original_size(0.125)),
+                            2 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/2_of_spades.png")).fit_to_original_size(0.125)),
+                            3 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/3_of_spades.png")).fit_to_original_size(0.125)),
+                            4 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/4_of_spades.png")).fit_to_original_size(0.125)),
+                            5 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/5_of_spades.png")).fit_to_original_size(0.125)),
+                            6 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/6_of_spades.png")).fit_to_original_size(0.125)),
+                            7 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/7_of_spades.png")).fit_to_original_size(0.125)),
+                            8 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/8_of_spades.png")).fit_to_original_size(0.125)),
+                            9 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/9_of_spades.png")).fit_to_original_size(0.125)),
+                            10 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/10_of_spades.png")).fit_to_original_size(0.125)),
+                            11 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/11_of_spades.png")).fit_to_original_size(0.125)),
+                            12 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/12_of_spades.png")).fit_to_original_size(0.125)),
+                            13 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/13_of_spades.png")).fit_to_original_size(0.125)),
+                            _ => ui.add(egui::Image::new(egui::include_image!("../assets/cards/error.png")).fit_to_original_size(0.125)),
+                        };
+                    },
+                    Suit::Club => {
+                        match game_state.on_deck.value {
+                            1 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/1_of_clubs.png")).fit_to_original_size(0.125)),
+                            2 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/2_of_clubs.png")).fit_to_original_size(0.125)),
+                            3 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/3_of_clubs.png")).fit_to_original_size(0.125)),
+                            4 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/4_of_clubs.png")).fit_to_original_size(0.125)),
+                            5 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/5_of_clubs.png")).fit_to_original_size(0.125)),
+                            6 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/6_of_clubs.png")).fit_to_original_size(0.125)),
+                            7 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/7_of_clubs.png")).fit_to_original_size(0.125)),
+                            8 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/8_of_clubs.png")).fit_to_original_size(0.125)),
+                            9 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/9_of_clubs.png")).fit_to_original_size(0.125)),
+                            10 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/10_of_clubs.png")).fit_to_original_size(0.125)),
+                            11 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/11_of_clubs.png")).fit_to_original_size(0.125)),
+                            12 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/12_of_clubs.png")).fit_to_original_size(0.125)),
+                            13 => ui.add(egui::Image::new(egui::include_image!("../assets/cards/13_of_clubs.png")).fit_to_original_size(0.125)),
+                            _ => ui.add(egui::Image::new(egui::include_image!("../assets/cards/error.png")).fit_to_original_size(0.125)),
+                        };
+                    },
+                };
+            } else {
+                ui.add(egui::Image::new(egui::include_image!("../assets/cards/empty.png")).fit_to_original_size(0.125));
+                }
         });
 
         ui.separator();
-
+        
+        // Display Hand
         ui.label("Hand:");
-        ui.horizontal(|ui| {
+        ui.horizontal_wrapped(|ui| {
             for card in &game_state.hand {
                 match card.suit {
                     Suit::Heart => {
@@ -282,6 +293,28 @@ fn my_ui(mut contexts: EguiContexts, mut game_state: ResMut<GameState>) {
             }
         });
     });
+    if popup.show_popup && popup.win {
+        egui::Window::new("Congratulations!")
+            .collapsible(false)
+            .resizable(false)
+            .show(contexts.ctx_mut(), |ui| {
+                ui.label("You Win!");
+                if ui.button("Play Again").clicked() {
+                    popup.show_popup = false;
+                }
+            });
+    } 
+    else if popup.show_popup && !popup.win {
+        egui::Window::new("Oh No!")
+            .collapsible(false)
+            .resizable(false)
+            .show(contexts.ctx_mut(), |ui| {
+                ui.label("You Lose!");
+                if ui.button("Play Again").clicked() {
+                    popup.show_popup = false;
+                }
+            });
+    }
 }
 
 
