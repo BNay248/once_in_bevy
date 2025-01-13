@@ -20,8 +20,8 @@ Once the deck is empty, if your hand is also empty, you win!
 
 
 TODOs:
-Preload images
-Refactor everything
-Stack images of cards > position 4 in the hand
-Make top lane GUI prettier
+Preload images, 
+Refactor everything, 
+Stack images of cards > position 4 in the hand, 
+Make top lane GUI prettier, 
 Animations?
