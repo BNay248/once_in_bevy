@@ -20,7 +20,7 @@ Once the deck is empty, if your hand is also empty, you win!
 
 
 TODOs:
-Preload images, 
+Make win/loss window into new game screen to prevent playing while messaging is present,
 Refactor everything, 
 Stack images of cards > position 4 in the hand, 
 Make top lane GUI prettier, 
