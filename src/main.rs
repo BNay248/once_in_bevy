@@ -80,11 +80,11 @@ fn setup(mut commands: Commands, mut context: EguiContexts) {
         on_deck: Card { value: 1, suit: Suit::Heart, chopping_block: false },
     });
     commands.insert_resource(Popup { show_popup: false, win: false } );
-    commands.insert_resource(CountdownTimer(Timer::from_seconds(2.0, TimerMode::Once)))
+    commands.insert_resource(CountdownTimer(Timer::from_seconds(0.75, TimerMode::Once)))
 
 }
 
-fn check_cards(mut game_state: ResMut<GameState>, mut timer: ResMut<CountdownTimer>, time: Res<Time>) {
+fn check_cards(mut game_state: ResMut<GameState>, mut timer: ResMut<CountdownTimer>, time: Res<Time>, mut popup: ResMut<Popup>) {
     let length = game_state.hand.len();
     if length > 3 {
         let first = game_state.hand[length -1];
@@ -115,6 +115,19 @@ fn check_cards(mut game_state: ResMut<GameState>, mut timer: ResMut<CountdownTim
                 game_state.hand.remove(length - 3);
                 timer.0.reset();
             }
+        } else {
+            if game_state.deck.is_empty(){
+                popup.show_popup = true;
+                if game_state.hand.is_empty() { 
+                    popup.win = true;
+                    game_state.hand.clear();
+                    game_state.deck = init_deck();
+                } else {
+                    popup.win = false;
+                    game_state.hand.clear();
+                    game_state.deck = init_deck();
+                }
+            }
         }
     }
 }
@@ -127,22 +140,10 @@ fn my_ui(mut contexts: EguiContexts, mut game_state: ResMut<GameState>, mut popu
     ui.horizontal(|ui| {
         ui.vertical(|ui| {
             ui.label(format!("Cards left: {}", game_state.deck.len()));
-            if timer.0.finished() || timer.0.elapsed_secs() == 0.0 {
+            if timer.0.elapsed_secs() == 0.0 {
                 if ui.button("Draw").clicked() {
                     if let Some(card) = game_state.deck.pop() {
                         game_state.hand.push(card);
-                        if game_state.deck.is_empty(){
-                            popup.show_popup = true;
-                            if game_state.hand.is_empty() { 
-                                popup.win = true;
-                                game_state.hand.clear();
-                                game_state.deck = init_deck();
-                            } else {
-                                popup.win = false;
-                                game_state.hand.clear();
-                                game_state.deck = init_deck();
-                            }
-                        }
                     }
                 }
             }
